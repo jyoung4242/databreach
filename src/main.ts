@@ -44,17 +44,21 @@ const model: any = {
     timeHandler: 0,
     showFinalModal: false,
     showHelp: (event: any, model: any) => {
+      if (model.breach.clickLock) return;
       model.breach.isHelpVisible = !model.breach.isHelpVisible;
       //pause timer
       model.breach.gamePaused = model.breach.isHelpVisible;
     },
     closeGame: () => {
+      if (model.breach.clickLock) return;
       model.breach.isVisible = false;
     },
     done: () => {
-      checkForVictory();
+      if (model.breach.clickLock) return;
+      checkForVictory(true);
     },
     reset: () => {
+      if (model.breach.clickLock) return;
       model.breach.isVisible = false;
       setTimeout(() => {
         model.breach.onLoad();
@@ -69,6 +73,7 @@ const model: any = {
       let Acol = localModel.activeCol;
 
       //gaurd conditions
+      if (localModel.clickLock) return;
       if (localModel.numGuesses >= localModel.maxNumGuesses) return;
       if (localModel.highlightToggle == "row" && square.row != Arow) return;
       if (localModel.highlightToggle == "col" && square.col != Acol) return;
@@ -92,12 +97,12 @@ const model: any = {
       localModel.numGuesses++;
 
       checkGuesses();
-
-      checkForVictory();
+      checkForVictory(false);
     },
-
+    clickLock: false,
     numOfTargets: 0,
     maxNumGuesses: 4,
+    burnoffTimer: 10,
     highlightToggle: "row",
     activeRow: 0,
     activeCol: 0,
@@ -125,12 +130,16 @@ const model: any = {
       model.breach.rows = [];
       model.breach.cols = [];
       model.breach.guesses = [];
+      model.breach.numGuesses = 0;
       model.breach.activeRow = 0;
       model.breach.activeCol = 0;
+      model.breach.clickLock = false;
+      model.breach.isHelpVisible = false;
+      model.breach.showFinalModal = false;
+      model.breach.timeIsRunning = false;
 
       let loopIndexSeqEasy = 0;
       let loopIndexSeqOther = 0;
-
       let randomSequenceValues: Array<string>;
 
       //get difficulty
@@ -139,22 +148,22 @@ const model: any = {
           loopIndexSeqEasy = 2;
           loopIndexSeqOther = 2;
           randomSequenceValues = getSequenceArray(3);
-          model.breach.timeremaining = 30;
-          model.breach.maxNumGuesses = 6;
+          model.breach.timeremaining = 30; //30
+          model.breach.maxNumGuesses = 7;
           break;
         case "med":
           loopIndexSeqEasy = 2;
           loopIndexSeqOther = 3;
           randomSequenceValues = getSequenceArray(3);
           model.breach.timeremaining = 20;
-          model.breach.maxNumGuesses = 5;
+          model.breach.maxNumGuesses = 6;
           break;
         case "hard":
           loopIndexSeqEasy = 3;
           loopIndexSeqOther = 3;
           randomSequenceValues = getSequenceArray(4);
           model.breach.timeremaining = 15;
-          model.breach.maxNumGuesses = 4;
+          model.breach.maxNumGuesses = 5;
           break;
         default:
           loopIndexSeqEasy = 2;
@@ -188,9 +197,15 @@ const model: any = {
       model.breach.sequences.push({
         id: 0,
         values: tempValues,
+        status: "off",
         get getLamp() {
-          if (this.values.every(val => val.bordercolor == borderColor.selected)) return -20;
-          else return 0;
+          if (this.values.every(val => val.bordercolor == borderColor.selected)) {
+            this.status = "on";
+            return -20;
+          } else {
+            this.status = "off";
+            return 0;
+          }
         },
       });
 
@@ -217,8 +232,13 @@ const model: any = {
         id: 1,
         values: tempValues,
         get getLamp() {
-          if (this.values.every(val => val.bordercolor == borderColor.selected)) return -20;
-          else return 0;
+          if (this.values.every(val => val.bordercolor == borderColor.selected)) {
+            this.status = "on";
+            return -20;
+          } else {
+            this.status = "off";
+            return 0;
+          }
         },
       });
 
@@ -248,8 +268,13 @@ const model: any = {
         id: 2,
         values: tempValues,
         get getLamp() {
-          if (this.values.every(val => val.bordercolor == borderColor.selected)) return -20;
-          else return 0;
+          if (this.values.every(val => val.bordercolor == borderColor.selected)) {
+            this.status = "on";
+            return -20;
+          } else {
+            this.status = "off";
+            return 0;
+          }
         },
       });
 
@@ -282,6 +307,14 @@ const model: any = {
       model.breach.cols.push({ id: 2, y: 103, x: 134, vis: false });
       model.breach.cols.push({ id: 3, y: 103, x: 171, vis: false });
       model.breach.cols.push({ id: 4, y: 103, x: 207, vis: false });
+
+      //start the game timer
+      //reset game timer if already instanced
+      if (model.breach.timeHandler != 0) {
+        clearInterval(model.breach.timeHandler);
+        model.breach.timeHandler = 0;
+      }
+      checkTime();
     },
     timeCheck: () => {
       if (!model.breach.timeIsRunning) {
@@ -289,17 +322,9 @@ const model: any = {
         model.breach.timeHandler = setInterval(() => {
           if (model.breach.timeremaining == 0) {
             model.breach.timeIsRunning = false;
-            model.breach.victoryStatus = "UNSUCCESSFUL";
-            model.breach.showFinalModal = true;
-
-            setTimeout(() => {
-              model.breach.isHelpVisible = false;
-              model.breach.showFinalModal = false;
-              model.breach.isVisible = false;
-              model.result = "UNSUCCESSFUL";
-              clearInterval(model.breach.timeHandler);
-              model.breach.timeHandler = 0;
-            }, 2500);
+            clearInterval(model.breach.timeHandler);
+            model.breach.timeHandler = 0;
+            checkForVictory(true);
           } else if (!model.breach.gamePaused) model.breach.timeremaining--;
         }, 1000);
       }
@@ -360,10 +385,12 @@ const template = `<div>
         
         <div class="helpModal" \${===breach.isHelpVisible}>
           <div class="helpText">
-            <p>Instructions: Objective of game is to manipulate the electrical path from power to the bypass connection.</p>
-            <p>Controls: left and right click on the tiles will rotate them clockwise/counter-clockwise</p>
-            <p>GamePlay: The electrical signal will pass through the connetions as you make them showing your progress</p>
-            <p>As the game becomes more difficult, there are more tiles and less time, the time starts as soon as game does</p>
+            <p>Instructions: Objective of game is to find the code sequences in the code matrix.</p>
+            <p>Controls: left click in the matrix to select a code to submit</p>
+            <p>GamePlay: The object is to ultimately find ALL 3 code sequences in the matrix</p>
+            <p>You will start with the top row in the matrix selected, and you can choose one of the codes in the row.</p>
+            <p>Each time you select a code, the row/column highlight will toggle, enabling the next group of available codes</p>
+            <p>As you complete sequences, the lamps will light.  The more lamps you light, the faster the game closes.</p>
           </div>
         </div>
         <div class="finalModal" \${===breach.showFinalModal}>
@@ -491,13 +518,78 @@ function checkGuesses() {
   }
 }
 
-function checkForVictory() {
+async function checkForVictory(isDone: boolean) {
   //game ends under X conditions
   /*
     -timer runs out
-    -exit button clicked
+    -done button clicked
     -all 3 conditions met
-
-
   */
+  console.log("here");
+
+  if (!isDone) {
+    //wait for peasy to update lamps
+    await wait(25);
+    if (returnLampStatus()) {
+      //all 3 lamps lit, declare victory
+      console.log("in lamps");
+
+      model.breach.burnoffTimer = 2;
+      model.breach.showFinalModal = true;
+      model.breach.victoryStatus = `SUCCESS: ${model.breach.burnoffTimer}`;
+      model.result = "SUCCESS";
+      model.breach.clickLock = true;
+      cookOffTimer();
+      return;
+    }
+  } else {
+    //done pressed
+    //set burnoff timer
+    let lampCount = 0;
+    model.breach.sequences.forEach(seq => {
+      if (seq.status == "on") lampCount++;
+    });
+    if (lampCount > 0) {
+      //show ending modal
+      if (lampCount == 1) model.breach.burnoffTimer = 12;
+      else model.breach.burnoffTimer = 8;
+      model.breach.showFinalModal = true;
+      model.result = "SUCCESS";
+      model.breach.victoryStatus = `SUCCESS: ${model.breach.burnoffTimer}`;
+      model.breach.clickLock = true;
+      cookOffTimer();
+    } else {
+      console.log("in teimer done");
+      model.breach.burnoffTimer = 2;
+      model.breach.showFinalModal = true;
+      model.result = "FAIL";
+      model.breach.victoryStatus = `FAIL: ${model.breach.burnoffTimer}`;
+      model.breach.clickLock = true;
+      cookOffTimer();
+    }
+  }
+}
+
+function returnLampStatus(): boolean {
+  return model.breach.sequences.every(seq => seq.status === "on");
+}
+
+async function cookOffTimer() {
+  for (let index = 0; index <= model.breach.burnoffTimer; index++) {
+    await wait(1000);
+    if (model.result == "SUCCESS") model.breach.victoryStatus = `SUCCESS: ${model.breach.burnoffTimer - index}`;
+    else model.breach.victoryStatus = `FAIL: ${model.breach.burnoffTimer - index}`;
+  }
+  await 500;
+  model.breach.showFinalModal = false;
+  model.breach.isVisible = false;
+  //burnoff done
+}
+
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function checkTime() {
+  model.breach.timeCheck();
 }
