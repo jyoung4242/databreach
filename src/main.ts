@@ -28,7 +28,7 @@ const model: any = {
   result: "waiting",
   seed: <any>undefined,
   breach: {
-    version: "1.0.2",
+    version: "1.0.3",
     gamePaused: false,
     isHelpVisible: false,
     appwidth: 500,
@@ -62,6 +62,7 @@ const model: any = {
       if (model.breach.clickLock) return;
       model.breach.isVisible = false;
       setTimeout(() => {
+        model.breach.clickLock = false;
         model.breach.onLoad();
         model.breach.isVisible = true;
       }, 350);
@@ -132,11 +133,13 @@ const model: any = {
       model.breach.cols = [];
       model.breach.guesses = [];
       model.breach.numGuesses = 0;
+      model.breach.highlightToggle = "row";
       model.breach.activeRow = 0;
       model.breach.activeCol = 0;
       model.breach.clickLock = false;
       model.breach.isHelpVisible = false;
       model.breach.showFinalModal = false;
+      if (model.breach.timeHandler != 0) clearInterval(model.breach.timeHandler);
       model.breach.timeIsRunning = false;
       model.breach.timeHandler = 0;
 
