@@ -28,7 +28,7 @@ const model: any = {
   result: "waiting",
   seed: <any>undefined,
   breach: {
-    version: "1.0.3",
+    version: "1.0.4",
     gamePaused: false,
     isHelpVisible: false,
     appwidth: 500,
@@ -171,11 +171,12 @@ const model: any = {
           model.breach.maxNumGuesses = 5;
           break;
         default:
+          console.log("difficulty is: ", diff);
           loopIndexSeqEasy = 2;
           loopIndexSeqOther = 2;
           randomSequenceValues = getSequenceArray(3);
           model.breach.timeremaining = 30;
-          model.breach.maxNumGuesses = 6;
+          model.breach.maxNumGuesses = 7;
           break;
       }
 
