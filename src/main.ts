@@ -28,7 +28,7 @@ const model: any = {
   result: "waiting",
   seed: <any>undefined,
   breach: {
-    version: "1.0.6",
+    version: "1.0.7",
     gamePaused: false,
     isHelpVisible: false,
     appwidth: 500,
@@ -63,7 +63,7 @@ const model: any = {
       model.breach.isVisible = false;
       setTimeout(() => {
         model.breach.clickLock = false;
-        model.breach.onLoad();
+        model.breach.onLoad(model.level);
         model.breach.isVisible = true;
       }, 350);
     },
@@ -171,7 +171,6 @@ const model: any = {
           model.breach.maxNumGuesses = 5;
           break;
         default:
-          console.log("difficulty is: ", diff);
           loopIndexSeqEasy = 2;
           loopIndexSeqOther = 2;
           randomSequenceValues = getSequenceArray(3);
@@ -532,14 +531,12 @@ async function checkForVictory(isDone: boolean) {
     -done button clicked
     -all 3 conditions met
   */
-  console.log("here");
 
   if (!isDone) {
     //wait for peasy to update lamps
     await wait(25);
     if (returnLampStatus()) {
       //all 3 lamps lit, declare victory
-      console.log("in lamps");
       model.breach.timeIsRunning = false;
       clearInterval(model.breach.timeHandler);
       model.breach.timeHandler = 0;
@@ -568,7 +565,6 @@ async function checkForVictory(isDone: boolean) {
       model.breach.clickLock = true;
       cookOffTimer();
     } else {
-      console.log("in teimer done");
       model.breach.burnoffTimer = 2;
       model.breach.showFinalModal = true;
       model.result = "FAIL";
