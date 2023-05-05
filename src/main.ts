@@ -28,6 +28,7 @@ const model: any = {
   result: "waiting",
   seed: <any>undefined,
   breach: {
+    version: "1.0.1",
     gamePaused: false,
     isHelpVisible: false,
     appwidth: 500,
@@ -137,6 +138,7 @@ const model: any = {
       model.breach.isHelpVisible = false;
       model.breach.showFinalModal = false;
       model.breach.timeIsRunning = false;
+      model.breach.timeHandler = 0;
 
       let loopIndexSeqEasy = 0;
       let loopIndexSeqOther = 0;
@@ -333,6 +335,7 @@ const model: any = {
 };
 const template = `<div> 
 <div class='controls'> 
+    <div>Version: \${breach.version}</div> 
     <button \${click@=>launch}> launch minigame</button>
     <select>
         <option \${'easy' ==> level}>Easy</option>
