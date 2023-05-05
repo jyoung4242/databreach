@@ -28,7 +28,7 @@ const model: any = {
   result: "waiting",
   seed: <any>undefined,
   breach: {
-    version: "1.0.1",
+    version: "1.0.2",
     gamePaused: false,
     isHelpVisible: false,
     appwidth: 500,
@@ -536,7 +536,9 @@ async function checkForVictory(isDone: boolean) {
     if (returnLampStatus()) {
       //all 3 lamps lit, declare victory
       console.log("in lamps");
-
+      model.breach.timeIsRunning = false;
+      clearInterval(model.breach.timeHandler);
+      model.breach.timeHandler = 0;
       model.breach.burnoffTimer = 2;
       model.breach.showFinalModal = true;
       model.breach.victoryStatus = `SUCCESS: ${model.breach.burnoffTimer}`;
