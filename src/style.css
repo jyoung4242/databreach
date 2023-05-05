@@ -193,7 +193,7 @@ body {
   user-select: none;
   border: #03f106 1.5px dotted;
   border-radius: 5px;
-  letter-spacing: 0.5px;
+  /*  letter-spacing: 0.5px; */
   gap: 10px;
 }
 
@@ -231,7 +231,7 @@ body {
   text-align: left;
   color: var(--trs80-light-green);
   user-select: none;
-  letter-spacing: 0.5px;
+  /* letter-spacing: 0.5px; */
 }
 
 .gameborder {
@@ -430,7 +430,7 @@ body {
   font-size: 13px;
   font-family: Arial, Helvetica, sans-serif;
   text-align: left;
-  letter-spacing: 1px;
+  /* letter-spacing: 1px; */
 }
 
 .finalModal {

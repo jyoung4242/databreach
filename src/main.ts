@@ -28,7 +28,7 @@ const model: any = {
   result: "waiting",
   seed: <any>undefined,
   breach: {
-    version: "1.0.5",
+    version: "1.0.6",
     gamePaused: false,
     isHelpVisible: false,
     appwidth: 500,
